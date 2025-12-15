@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Item, ItemType, ItemStatus, User, UserRole, Category, MatchSuggestion } from './types';
 import { INITIAL_ITEMS, CURRENT_USER, ADMIN_USER } from './services/mockData';

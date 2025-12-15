@@ -1,11 +1,18 @@
 
-## Run Locally
+## Run Locally (Next.js)
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js
 
-
-1. Install dependencies:
+1. Install dependencies  
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Configure API key (server-side only)  
+   Create `.env.local` with `GEMINI_API_KEY=your_key_here`
+3. Start dev server  
+   `npm run dev`  
+   App runs at http://localhost:3000
+4. Stop dev server  
+   `Ctrl + C` in the running terminal
+
+## Build & Preview
+- Build: `npm run build`
+- Start production build locally: `npm run start`
