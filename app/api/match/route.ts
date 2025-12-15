@@ -2,6 +2,28 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { Item, ItemType, MatchSuggestion } from '@/types';
 
+const MAX_TEXT_LENGTH = 400;
+const MAX_LIST_ITEMS = 10;
+
+const sanitizeText = (input: unknown, maxLength: number = MAX_TEXT_LENGTH) => {
+  if (typeof input !== 'string') return '';
+  const trimmed = input.trim().slice(0, maxLength);
+  const withoutControl = trimmed.replace(/[\u0000-\u001F\u007F]/g, ' ');
+  const withoutDelimiters = withoutControl.replace(/[{}<>`]/g, '');
+  const singleSpaced = withoutDelimiters.replace(/\s+/g, ' ');
+  return singleSpaced;
+};
+
+const sanitizeItem = (item: Item) => ({
+  id: sanitizeText(item.id, 64),
+  title: sanitizeText(item.title, 160),
+  description: sanitizeText(item.description, 400),
+  category: sanitizeText(item.category, 80),
+  location: sanitizeText(item.location, 120),
+  date: sanitizeText(item.date, 40),
+  type: item.type
+});
+
 export async function POST(req: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -34,18 +56,23 @@ export async function POST(req: Request) {
     return NextResponse.json([]);
   }
 
+  const safeTarget = sanitizeItem(targetItem);
+  const safeCandidates = relevantCandidates
+    .slice(0, MAX_LIST_ITEMS)
+    .map(c => sanitizeItem(c));
+
   const prompt = `
     You are an intelligent Lost & Found matching agent.
     
-    Target Item (${targetItem.type}):
-    Title: ${targetItem.title}
-    Description: ${targetItem.description}
-    Category: ${targetItem.category}
-    Location: ${targetItem.location}
-    Date: ${targetItem.date}
+    Target Item (${safeTarget.type}):
+    Title: ${safeTarget.title}
+    Description: ${safeTarget.description}
+    Category: ${safeTarget.category}
+    Location: ${safeTarget.location}
+    Date: ${safeTarget.date}
 
     Candidate Items (${candidateType}):
-    ${JSON.stringify(relevantCandidates.map(c => ({
+    ${JSON.stringify(safeCandidates.map(c => ({
       id: c.id,
       title: c.title,
       description: c.description,
